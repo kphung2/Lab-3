@@ -74,28 +74,47 @@
             container: 'map', // container ID
             style: 'mapbox://styles/mapbox/streets-v11', // style URL
             zoom: 2, // starting zoom
-            center: [0, 20] // starting center
+            center: [138, 38] // starting center
         });
 
         // Fetch GeoJSON data asynchronously
         async function geojsonFetch() {
-            let response, earthquakes, landmarks, table;
-            
+            let response, earthquakes, japan, landmarks, table;
+
             // Fetch earthquakes data
             response = await fetch('assets/earthquakes.geojson');
-            earthquakes = await response.json();
-            
+            if (response.ok) {
+                earthquakes = await response.json();
+            } else {
+                console.error('Error fetching earthquakes data');
+                return;
+            }
+
+            // Fetch japan data
+            response = await fetch('assets/japan.json');
+            if (response.ok) {
+                japan = await response.json();
+            } else {
+                console.error('Error fetching japan data');
+                return;
+            }
+
             // Fetch landmarks data
             response = await fetch('assets/landmarks.geojson');
-            landmarks = await response.json();
+            if (response.ok) {
+                landmarks = await response.json();
+            } else {
+                console.error('Error fetching landmarks data');
+                return;
+            }
 
-            // Add earthquakes data to the map
+            // Add data to the map
             map.on('load', function loadingData() {
+                // Add earthquakes data
                 map.addSource('earthquakes', {
                     type: 'geojson',
                     data: earthquakes
                 });
-
                 map.addLayer({
                     'id': 'earthquakes-layer',
                     'type': 'circle',
@@ -108,12 +127,26 @@
                     }
                 });
 
-                // Add landmarks data to the map
+                // Add japan data
+                map.addSource('japan', {
+                    type: 'geojson',
+                    data: japan
+                });
+                map.addLayer({
+                    'id': 'japan-layer',
+                    'type': 'fill',
+                    'source': 'japan',
+                    'paint': {
+                        'fill-color': '#0080ff',
+                        'fill-opacity': 0.5
+                    }
+                });
+
+                // Add landmarks data
                 map.addSource('landmarks', {
                     type: 'geojson',
                     data: landmarks
                 });
-
                 map.addLayer({
                     'id': 'landmarks-layer',
                     'type': 'circle',
