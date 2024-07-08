@@ -48,6 +48,12 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+
+        @media screen and (max-width: 1024px) {
+            #side-panel {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -79,7 +85,7 @@
 
         // Fetch GeoJSON data asynchronously
         async function geojsonFetch() {
-            let response, earthquakes, japan, landmarks, table;
+            let response, earthquakes, japan, landmarks, nationalParks, table;
 
             // Fetch earthquakes data
             response = await fetch('assets/earthquakes.geojson');
@@ -105,6 +111,15 @@
                 landmarks = await response.json();
             } else {
                 console.error('Error fetching landmarks data');
+                return;
+            }
+
+            // Fetch national parks data
+            response = await fetch('assets/national_parks.geojson');
+            if (response.ok) {
+                nationalParks = await response.json();
+            } else {
+                console.error('Error fetching national parks data');
                 return;
             }
 
@@ -158,6 +173,23 @@
                         'circle-stroke-color': 'white'
                     }
                 });
+
+                // Add national parks data
+                map.addSource('nationalParks', {
+                    type: 'geojson',
+                    data: nationalParks
+                });
+                map.addLayer({
+                    'id': 'nationalParks-layer',
+                    'type': 'circle',
+                    'source': 'nationalParks',
+                    'paint': {
+                        'circle-radius': 8,
+                        'circle-stroke-width': 2,
+                        'circle-color': 'green',
+                        'circle-stroke-color': 'white'
+                    }
+                });
             });
 
             // Generate the combined table
@@ -181,6 +213,16 @@
                 cell1.innerHTML = landmarks.features[i].properties.id;
                 cell2.innerHTML = landmarks.features[i].properties.name;
                 cell3.innerHTML = landmarks.features[i].properties.value;
+            }
+
+            for (let i = 0; i < nationalParks.features.length; i++) {
+                row = table.insertRow(-1);
+                cell1 = row.insertCell(0);
+                cell2 = row.insertCell(1);
+                cell3 = row.insertCell(2);
+                cell1.innerHTML = nationalParks.features[i].properties.id;
+                cell2.innerHTML = nationalParks.features[i].properties.name;
+                cell3.innerHTML = nationalParks.features[i].properties.value;
             }
 
             // Sort table by value
