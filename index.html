@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
     <meta charset="utf-8">
-    <title>Earthquake List</title>
+    <title>GeoJSON Data Visualization</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.5.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.5.0/mapbox-gl.js"></script>
@@ -53,13 +53,13 @@
 <body>
     <main id="container">
         <div id="side-panel">
-            <h2>Earthquake List</h2>
-            <button>Sort by Magnitude</button>
+            <h2>GeoJSON Data List</h2>
+            <button>Sort by Value</button>
             <table>
                 <tr>
                     <th>id</th>
-                    <th>magnitude</th>
-                    <th>timestamp</th>
+                    <th>name</th>
+                    <th>value</th>
                 </tr>
             </table>
         </div>
@@ -72,20 +72,24 @@
         // Create a map instance
         let map = new mapboxgl.Map({
             container: 'map', // container ID
-            style: 'mapbox://styles/mapbox/satellite-v9', // style URL
-            zoom: 5.5, // starting zoom
-            center: [138, 38] // starting center
+            style: 'mapbox://styles/mapbox/streets-v11', // style URL
+            zoom: 2, // starting zoom
+            center: [0, 20] // starting center
         });
 
         // Fetch GeoJSON data asynchronously
         async function geojsonFetch() {
-            let response, earthquakes, japan, table;
+            let response, earthquakes, landmarks, table;
+            
+            // Fetch earthquakes data
             response = await fetch('assets/earthquakes.geojson');
             earthquakes = await response.json();
-            response = await fetch('assets/japan.json');
-            japan = await response.json();
+            
+            // Fetch landmarks data
+            response = await fetch('assets/landmarks.geojson');
+            landmarks = await response.json();
 
-            // Add data to the map as new layers and table on the side
+            // Add earthquakes data to the map
             map.on('load', function loadingData() {
                 map.addSource('earthquakes', {
                     type: 'geojson',
@@ -104,37 +108,49 @@
                     }
                 });
 
-                map.addSource('japan', {
+                // Add landmarks data to the map
+                map.addSource('landmarks', {
                     type: 'geojson',
-                    data: japan
+                    data: landmarks
                 });
 
                 map.addLayer({
-                    'id': 'japan-layer',
-                    'type': 'fill',
-                    'source': 'japan',
+                    'id': 'landmarks-layer',
+                    'type': 'circle',
+                    'source': 'landmarks',
                     'paint': {
-                        'fill-color': '#0080ff',
-                        'fill-opacity': 0.5
+                        'circle-radius': 8,
+                        'circle-stroke-width': 2,
+                        'circle-color': 'blue',
+                        'circle-stroke-color': 'white'
                     }
                 });
             });
 
-            // Generate the earthquake table
+            // Generate the combined table
             table = document.getElementsByTagName("table")[0];
             let row, cell1, cell2, cell3;
             for (let i = 0; i < earthquakes.features.length; i++) {
-                // Create an empty <tr> element and add it to the 1st position of the table:
                 row = table.insertRow(-1);
                 cell1 = row.insertCell(0);
                 cell2 = row.insertCell(1);
                 cell3 = row.insertCell(2);
                 cell1.innerHTML = earthquakes.features[i].properties.id;
-                cell2.innerHTML = earthquakes.features[i].properties.mag;
-                cell3.innerHTML = new Date(earthquakes.features[i].properties.time).toLocaleDateString("en-US");
+                cell2.innerHTML = "Earthquake";
+                cell3.innerHTML = earthquakes.features[i].properties.mag;
             }
 
-            // Sort table by magnitude
+            for (let i = 0; i < landmarks.features.length; i++) {
+                row = table.insertRow(-1);
+                cell1 = row.insertCell(0);
+                cell2 = row.insertCell(1);
+                cell3 = row.insertCell(2);
+                cell1.innerHTML = landmarks.features[i].properties.id;
+                cell2.innerHTML = landmarks.features[i].properties.name;
+                cell3.innerHTML = landmarks.features[i].properties.value;
+            }
+
+            // Sort table by value
             let btn = document.getElementsByTagName("button")[0];
             btn.addEventListener('click', sortTable);
 
@@ -147,9 +163,9 @@
                     rows = table.rows;
                     for (i = 1; i < (rows.length - 1); i++) {
                         shouldSwitch = false;
-                        x = parseFloat(rows[i].getElementsByTagName("td")[1].innerHTML);
-                        y = parseFloat(rows[i + 1].getElementsByTagName("td")[1].innerHTML);
-                        if (x < y) {
+                        x = rows[i].getElementsByTagName("td")[2].innerHTML;
+                        y = rows[i + 1].getElementsByTagName("td")[2].innerHTML;
+                        if (x > y) {
                             shouldSwitch = true;
                             break;
                         }
