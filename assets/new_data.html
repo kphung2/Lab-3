@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <title>Landmark List</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.5.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.5.0/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #container {
+            display: flex;
+            height: 100vh;
+            flex-direction: row;
+            align-items: stretch;
+        }
+
+        #side-panel {
+            flex-basis: 500px;
+            overflow-y: scroll;
+        }
+
+        #map {
+            flex-grow: 1;
+        }
+
+        button {
+            margin-bottom: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 16px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <main id="container">
+        <div id="side-panel">
+            <h2>Landmark List</h2>
+            <button>Sort by Value</button>
+            <table>
+                <tr>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>value</th>
+                </tr>
+            </table>
+        </div>
+        <div id="map"></div>
+    </main>
+    <script>
+        // Add your Mapbox access token
+        mapboxgl.accessToken = 'pk.eyJ1Ijoia3BodW5nMiIsImEiOiJjbHljbGUxeTQwMG50MmpwdmdqbDhiYWR3In0.h6JYpvPKWaBoUalAwsQ1_Q';
+
+        // Create a map instance
+        let map = new mapboxgl.Map({
+            container: 'map', // container ID
+            style: 'mapbox://styles/mapbox/streets-v11', // different style URL
+            zoom: 2, // starting zoom
+            center: [0, 20] // starting center
+        });
+
+        // Fetch GeoJSON data asynchronously
+        async function geojsonFetch() {
+            let response, landmarks, table;
+            response = await fetch('assets/landmarks.geojson'); // Replace with your new data file
+            landmarks = await response.json();
+
+            // Add data to the map as new layers and table on the side
+            map.on('load', function loadingData() {
+                map.addSource('landmarks', {
+                    type: 'geojson',
+                    data: landmarks
+                });
+
+                map.addLayer({
+                    'id': 'landmarks-layer',
+                    'type': 'circle',
+                    'source': 'landmarks',
+                    'paint': {
+                        'circle-radius': 8,
+                        'circle-stroke-width': 2,
+                        'circle-color': 'blue',
+                        'circle-stroke-color': 'white'
+                    }
+                });
+            });
+
+            // Generate the landmark table
+            table = document.getElementsByTagName("table")[0];
+            let row, cell1, cell2, cell3;
+            for (let i = 0; i < landmarks.features.length; i++) {
+                // Create an empty <tr> element and add it to the 1st position of the table:
+                row = table.insertRow(-1);
+                cell1 = row.insertCell(0);
+                cell2 = row.insertCell(1);
+                cell3 = row.insertCell(2);
+                cell1.innerHTML = landmarks.features[i].properties.id;
+                cell2.innerHTML = landmarks.features[i].properties.name;
+                cell3.innerHTML = landmarks.features[i].properties.value;
+            }
+
+            // Sort table by value
+            let btn = document.getElementsByTagName("button")[0];
+            btn.addEventListener('click', sortTable);
+
+            function sortTable(e) {
+                let table, rows, switching, i, x, y, shouldSwitch;
+                table = document.getElementsByTagName("table")[0];
+                switching = true;
+                while (switching) {
+                    switching = false;
+                    rows = table.rows;
+                    for (i = 1; i < (rows.length - 1); i++) {
+                        shouldSwitch = false;
+                        x = rows[i].getElementsByTagName("td")[2].innerHTML;
+                        y = rows[i + 1].getElementsByTagName("td")[2].innerHTML;
+                        if (x > y) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                    if (shouldSwitch) {
+                        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                        switching = true;
+                    }
+                }
+            }
+        }
+
+        // Call the fetch function to load data
+        geojsonFetch();
+    </script>
+</body>
+</html>
