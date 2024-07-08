@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 1,
+        "name": "Yellowstone National Park",
+        "value": "High"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-110.5885, 44.4280]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "name": "Yosemite National Park",
+        "value": "High"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-119.5383, 37.8651]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 3,
+        "name": "Grand Canyon National Park",
+        "value": "High"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-112.1401, 36.0544]
+      }
+    }
+  ]
+}
